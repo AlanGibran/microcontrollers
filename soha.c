@@ -3,6 +3,4 @@ They're singing to their favorite songs
 and stuff.
 Just four weeks more to go.
 
-mil pasos
-
 
