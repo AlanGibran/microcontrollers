@@ -50,7 +50,7 @@ sum
     B sum
 
 store
-    STR R3, [R5, #0x1]!; mete el R2 a donde apunta R5
+    STR R3, [R5, #0x1]!; mete R3 a donde apunta R5
 	MOV R3, #0x0; R3=0 Final result will be here
 	ADD R12, R12, #1
 	CMP R12, #2
