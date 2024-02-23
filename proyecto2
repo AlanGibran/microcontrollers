@@ -1,0 +1,66 @@
+; Project 2: Arithmetic using the Assembly Language
+    .global main
+    .text
+OS  .EQU 0x04 ; offset para rellenar
+
+main
+
+; 20 valores aleatorios a partir de 0x2000.0000
+    MOVW R0, #0x0000
+    MOVT R0, #0x2000
+
+    MOVW R1, #0x0001
+    MOVT R1, #0x0000
+    STR R1, [R0]
+    STR R1, [R0, #OS]!
+    STR R1, [R0, #OS]!
+    STR R1, [R0, #OS]!
+	STR R1, [R0, #OS]!
+
+;INITIALIZE COUNTERS
+    MOV  R12, #0; contador
+
+; Starting point where we can take values from
+    MOVW R0, #0xFFFF ;[2000.0000 - 1] = 1FFF.FFFF
+    MOVT R0, #0x1FFF
+
+; Starting point for Results
+    MOVW R5, #0x001F ;[2000.0020 - 1] = 2000.001F
+    MOVT R5, #0x2000
+; Starting point for -order-
+;    MOVW R6, #0x0115
+;    MOVT R6, #0x2000
+
+; ACCESS TO MEMORY
+y_label
+    MOV  R10, #0
+
+sum
+    ADD  R10, R10, #1 ; counter, N=1
+	CMP R10, #10 ; make sure to do this 10x
+	BEQ store ; if counter R10=20, stop and finish
+
+; store in R2 the -VALUE- which points R0: (XXXX.XXXX)
+; + offset and update the memory location (per byte)
+
+    LDRBT R2, [R0, #0x1]! ; Guardo en R2 los LSB
+	ADD R3, R3, R2; R_r = R_r + R2
+
+; if not the case, up to the next value in memory
+    B sum
+
+store
+    STR R3, [R5, #0x1]!; mete el R2 a donde apunta R5
+	MOV R3, #0x0; R3=0 Final result will be here
+	ADD R12, R12, #1
+	CMP R12, #2
+	BEQ fin
+
+	B y_label
+
+;    ADD R12, #0x1 ; the byte next to -value- contains -order-
+;    STRBT R12, [R6, #0x2]!
+;    B label ; see if we're done with the 20 values
+
+fin B fin
+	.end
