@@ -38,7 +38,7 @@ y_label
 sum
     ADD  R10, R10, #1 ; counter, N=1
 	CMP R10, #10 ; make sure to do this 10x
-	BEQ store ; if counter R10=20, stop and finish
+	BEQ store ;  if eq i.e. [10-10=0]  =>  [Z = 1]
 
 ; store in R2 the -VALUE- which points R0: (XXXX.XXXX)
 ; + offset and update the memory location (per byte)
