@@ -36,9 +36,9 @@ main
     MOV  R10, #0; Counter. if R10 = 10, exit SUM loop 
 
 SUM
-    ADD  R10, R10, #1 ; Start with the first iteration
     LDRB R1, [R0, #1]!; {B} Just one byte is needed for each sum
     ADDS R2, R1; {s} activates flags. Store the updated result in R2
+    ADD  R10, R10, #1 ; Start with the first iteration
     CMP R10, #ITER ; Make sure to do this 10x
     BNE SUM ; While not equal, go back and sum again
 
