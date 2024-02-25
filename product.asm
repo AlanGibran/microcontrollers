@@ -39,7 +39,7 @@ main
 ; Store product results in 2000.0090
     MOVW R9, #0x008E; [90-2 = 8E]
     MOVT R9, #0x2000
-
+;-------------------------------------------------------------
 PRODUCT
     LDRB R1, [R0, #1]!; R1 = X_i; [0 =< i =< 4]
     LDRB R2, [R12, #1]!; R2 = Y_i; [0 =< i =< 4]
@@ -50,27 +50,48 @@ PRODUCT
     ADD  R10, R10, #1 ; Start with the first iteration
     CMP R10, #4 ; Make sure to do this 4x
     BNE PRODUCT ; While not equal, go back and multiply again
-
+;-------------------------------------------------------------
 ; Retrieve product results from 2000.0090
     MOVW R9, #0x008E; [90-2 = 8E]
     MOVT R9, #0x2000
-; To store each squared result in 2000.0050
+; Store each squared result in 2000.0050
     MOVW R11, #0x004C; [50-4 = 4C] could be up to 36 bits
     MOVT R11, #0x2000; maximum value is 3.F017.F004 (36 bits)
 
     MOV  R10, #0; Counter
 
-
+;-------------------------------------------------------------
 SQUARED
     LDRH R1, [R9, #2]! ; R1 retrieves Z_i = X_i*Y_i
     MUL R2, R1, R1; R2 = Z_i^2
 ; Store each squared value in 2000.0050,
-    STR R2, [R11, #4]! ; #4 because they need 4 bytes
+; #4 because the power2 need 4 bytes
+; Max value = (FF*FF) = [FC05.FC01]
+    STR R2, [R11, #4]!
     ADD  R10, R10, #1 ; Start with the first iteration
     CMP R10, #4 ; Make sure to do this 4x
     BNE SQUARED ; While not equal, go back and multiply again
+;-------------------------------------------------------------
 
+; Retrieve squared results from 2000.0050
+    MOVW R9, #0x004C; [50-4 = 4C]
+    MOVT R9, #0x2000
 
+    MOV R2, #0
+
+    MOV  R10, #0; Counter
+;-------------------------------------------------------------
+SUM_SQ
+    LDR R1, [R9, #4]!
+    ADDS R2, R1
+
+    ADD  R10, R10, #1 ; Start with the first iteration
+    CMP R10, #4 ; Make sure to do this 4x
+    BNE SUM_SQ ; While not equal, go back and multiply again
+;-------------------------------------------------------------
+    MOVW R1, #0x003C; [40-4 = 3C]
+    MOVT R1, #0x2000
+	STR R2, [R1, #4]!
 
 fin B fin
-	.end
+    .end
