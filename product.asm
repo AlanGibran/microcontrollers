@@ -4,21 +4,28 @@
 OS   .EQU 0x04
 ITER .EQU 4 ; Counter in decimal
 
+;Case R2 > 0xFFFF.FFFF (C = 1)
+EXCEEDS_FFFF
+    MOVW R1, #0x003C; [40-4 = 3C]
+    MOVT R1, #0x2000
+    STR R2, [R1, #4]!
+    B fin
+
 main
 ; Starting from 0x2000.0000
     MOVW R0, #0x0000
     MOVT R0, #0x2000
 ; Store 20 random values (not really random)
-    MOVW R1, #0x0111
-    MOVT R1, #0x0302
+    MOVW R1, #0xFFFF; X_i values
+    MOVT R1, #0xFFFF
     STR R1, [R0]
     MOVW R1, #0x0504
     MOVT R1, #0x0706
     STR R1, [R0, #OS]!
     MOVW R1, #0x0908
-    MOVT R1, #0x0B0A
+    MOVT R1, #0xFFFF ; Y_i values
     STR R1, [R0, #OS]!
-    MOVW R1, #0x0D0C
+    MOVW R1, #0xFFFF
     MOVT R1, #0x0F0E
     STR R1, [R0, #OS]!
     MOVW R1, #0x1110
@@ -77,21 +84,25 @@ SQUARED
     MOVW R9, #0x004C; [50-4 = 4C]
     MOVT R9, #0x2000
 
-    MOV R2, #0
+    MOV R2, #0; Store the result in R2
 
     MOV  R10, #0; Counter
 ;-------------------------------------------------------------
 SUM_SQ
     LDR R1, [R9, #4]!
     ADDS R2, R1
-
     ADD  R10, R10, #1 ; Start with the first iteration
     CMP R10, #4 ; Make sure to do this 4x
-    BNE SUM_SQ ; While not equal, go back and multiply again
-;-------------------------------------------------------------
-    MOVW R1, #0x003C; [40-4 = 3C]
+    BNE SUM_SQ ; While not equal, go back and sum again
+
+; if R2 > 0xFFFF.FFFF (C = 1), then store R2 @0x40
+    BHS EXCEEDS_FFFF
+
+; else, store R2 @0x20
+    MOVW R1, #0x001C; [20-4 = 1C]
     MOVT R1, #0x2000
-	STR R2, [R1, #4]!
+    STR R2, [R1, #4]!
+
 
 fin B fin
     .end
