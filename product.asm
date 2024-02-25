@@ -40,8 +40,7 @@ main
     MOVW R12, #0x0009 ;[2000.000A - 1] = 2000.0009
     MOVT R12, #0x2000
 
-    MOV  R10, #0; Counter. if R10 = 10, exit product loop
-
+    MOV  R10, #0; Counter 
 
 ; Store product results in 2000.0090
     MOVW R9, #0x008E; [90-2 = 8E]
