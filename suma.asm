@@ -23,7 +23,7 @@ main
     STR R1, [R0, #OS]!
     MOVW R1, #0x1110
     MOVT R1, #0x1312
-	STR R1, [R0, #OS]!
+    STR R1, [R0, #OS]!
 
 ; Starting point where we can take values from
     MOVW R0, #0xFFFF ;[2000.0000 - 1] = 1FFF.FFFF
