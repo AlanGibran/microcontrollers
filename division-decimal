@@ -1,0 +1,27 @@
+; Project 2: Arithmetic using the Assembly Language
+    .global main
+sum     .EQU    50 ; 0x14
+count   .EQU    7 ; 0x07
+main
+    MOV R2, #sum       ; Load sum into R2
+    MOV R4, #count     ; Load count into R4
+
+    ; Calculate average using integer division
+    SDIV R5, R2, R4    ; R5 = 20/7 = [2].(8)5 ; 0x02
+    ; Calculate remainder (decimal part)
+    MOV R6, #100      ; Scaling factor (for 1 decimal place) 0xA
+    MUL R7, R2, R6     ; R7 = 20*10 = 200; 0xC8
+    SDIV R7, R7, R4    ; R7 = 28, we want the LSB: 8x10^0, see first sdiv; 0x1C
+
+    MUL R0, R5, R6 ; R0 = 2*10 = 20; 0x14
+    SUB R1, R7, R0     ; R1 = 28 - 20 = 8; 0x08
+
+    ; Store the integer and decimal parts in a 32-bit format
+    ; Assuming memory address 0x2000.0020 for storage
+    MOVW R0, #0x0020
+    MOVT R0, #0x2000
+    STR R5, [R0]        ; Store integer part
+    STR R1, [R0, #4]    ; Store decimal part
+
+end B end
+
