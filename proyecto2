@@ -1,66 +1,222 @@
 ; Project 2: Arithmetic using the Assembly Language
+
     .global main
-    .text
-OS  .EQU 0x04 ; offset para rellenar
+
+; Offset that updates the pointer when assigning values to RAM
+OS   .EQU 0x04
+ITER .EQU 10 ; Counter in decimal
+sum     .EQU    50 ; 0x14
+count   .EQU    7 ; 0x07
+
+; Case RESULT (R2) > 0xFFFF.FFFF (C = 1)
+EXCEEDS_FFFF
+    MOVW R1, #0x003C; [40-4 = 3C]
+    MOVT R1, #0x2000
+    STR R2, [R1, #4]!
+    B end
+
 
 main
 
-; 20 valores aleatorios a partir de 0x2000.0000
+; ***************-SUM-***************
+
+; Starting from 0x2000.0000
     MOVW R0, #0x0000
     MOVT R0, #0x2000
 
-    MOVW R1, #0x0001
-    MOVT R1, #0x0000
+; Store 20 values
+    MOVW R1, #0x01FA
+    MOVT R1, #0x0302
     STR R1, [R0]
+;    MOVW R1, #0x0504
+;    MOVT R1, #0x0706
     STR R1, [R0, #OS]!
+;    MOVW R1, #0x0908
+;    MOVT R1, #0x0B0A
     STR R1, [R0, #OS]!
+;    MOVW R1, #0x0D0C
+;    MOVT R1, #0x0F0E
     STR R1, [R0, #OS]!
-	STR R1, [R0, #OS]!
-
-;INITIALIZE COUNTERS
-    MOV  R12, #0; contador
+;    MOVW R1, #0x1110
+;    MOVT R1, #0x1312
+    STR R1, [R0, #OS]!
 
 ; Starting point where we can take values from
     MOVW R0, #0xFFFF ;[2000.0000 - 1] = 1FFF.FFFF
     MOVT R0, #0x1FFF
 
-; Starting point for Results
-    MOVW R5, #0x001F ;[2000.0020 - 1] = 2000.001F
-    MOVT R5, #0x2000
-; Starting point for -order-
-;    MOVW R6, #0x0115
-;    MOVT R6, #0x2000
+; R1 fetches each byte from RAM
+    MOV R1, #0
 
-; ACCESS TO MEMORY
-y_label
+; R2 stores the 8-bit value from RAM
+    MOV R2, #0 ; R2 = sum_{0}^{9} X_i for each iteration
+
+; Counter. If R10 = 10, exits SUM loop
     MOV  R10, #0
 
-sum
-    ADD  R10, R10, #1 ; counter, N=1
-	CMP R10, #10 ; make sure to do this 10x
-	BEQ store ;  if eq i.e. [10-10=0]  =>  [Z = 1]
+SUM
+    LDRB R1, [R0, #1]!; LDR{B} Just one byte is retrieved. Updates pointer (R0 = R0 + 1)
+    ADDS R2, R1; {S} sets state. Stores the updated result in R2
+    ADD  R10, R10, #1 ; counter = counter + 1
+    CMP R10, #2 ; Make sure to do this 10x ################################################################# TESTING
+    BNE SUM ; While not equal, go back and SUM again
 
-; store in R2 the -VALUE- which points R0: (XXXX.XXXX)
-; + offset and update the memory location (per byte)
+; Store the sum result in a 32-bit format @0x2000.0020
+    MOVW R6, #0x0020
+    MOVT R6, #0x2000
+    STR R2, [R6]
 
-    LDRBT R2, [R0, #0x1]! ; Guardo en R2 los LSB
-	ADD R3, R3, R2; R_r = R_r + R2
 
-; if not the case, up to the next value in memory
-    B sum
 
-store
-    STR R3, [R5, #0x1]!; mete R3 a donde apunta R5
-	MOV R3, #0x0; R3=0 Final result will be here
-	ADD R12, R12, #1
-	CMP R12, #2
-	BEQ fin
 
-	B y_label
 
-;    ADD R12, #0x1 ; the byte next to -value- contains -order-
-;    STRBT R12, [R6, #0x2]!
-;    B label ; see if we're done with the 20 values
+;-----------------------------------------------------------------------------------------------------------------------------------
 
-fin B fin
-	.end
+; *********SUM-OF-SQUARED-PRODUCTS**********
+
+; Starting point where we can take values from [X_i]
+    MOVW R0, #0xFFFF ;[2000.0000 - 1] = 1FFF.FFFF
+    MOVT R0, #0x1FFF
+
+; R12 points to [Y_0] i.e. [2000.000A] minus one
+    MOVW R12, #0x0009 ;[2000.000A - 1] = 2000.0009
+    MOVT R12, #0x2000
+
+    MOV  R10, #0; Counter
+
+; Store product results in 2000.0090
+    MOVW R9, #0x008E; [90-2 = 8E]
+    MOVT R9, #0x2000
+
+PRODUCT
+    LDRB R1, [R0, #1]! ; R1 = X_i; [0 =< i =< 4]
+    LDRB R2, [R12, #1]! ; R2 = Y_i; [0 =< i =< 4]
+    MUL R3, R1, R2 ; R3 = (X_i*Y_i)
+
+; Store product results in 2000.0090 [MAX = (FF*FF) = FE01 => 2 bytes]]
+    STRH R3, [R9, #2]! ; STR{H} i.e. 16-bit format, cannot be STRB
+
+    ADD  R10, R10, #1 ; counter += counter
+    CMP R10, #2 ; Make sure to do this 4x*****************************************************
+    BNE PRODUCT ; While not equal, go back and multiply the next set of bytes
+;-------------------------------------------------------------
+
+; Square-the-products section
+
+; Retrieve product results from 2000.0090
+    MOVW R9, #0x008E; [90-2 = 8E]
+    MOVT R9, #0x2000
+
+; Store each squared result in 2000.0050
+    MOVW R11, #0x004C; [50-4 = 4C] could be up to 36 bits
+    MOVT R11, #0x2000; maximum value is 3.F017.F004 (36 bits)
+
+    MOV  R10, #0; Counter
+
+;-------------------------------------------------------------
+SQUARED
+    LDRH R1, [R9, #2]! ; R1 retrieves Z_i = X_i*Y_i
+    MUL R2, R1, R1; R2 = Z_i^2
+
+; Store each squared value in 2000.0050
+; #4 because the power2 need 4 bytes
+; Max value = (FF*FF) = [FC05.FC01]
+    STR R2, [R11, #4]! ; R2 holds the squared term
+    ADD  R10, R10, #1 ; counter += counter
+    CMP R10, #2 ; Make sure to do this 4x***********************************************
+    BNE SQUARED ; While not equal, go back and multiply again
+;-------------------------------------------------------------
+
+; Retrieve squared results from 2000.0050
+    MOVW R9, #0x004C; [50-4 = 4C] ;---------------------THIS ISED TO BE R11
+    MOVT R9, #0x2000
+
+    MOV R2, #0; Store the result in R2
+
+    MOV  R10, #0; Counter
+;-------------------------------------------------------------
+SUM_SQ
+    LDR R1, [R9, #4]! ; doesn't matter the previous value of R1
+    ADDS R2, R1 ; Updates the sum
+    ADD  R10, R10, #1 ; Start with the first iteration
+    CMP R10, #2 ; Make sure to do this 4x*******************************************
+    BNE SUM_SQ ; While not equal, go back and sum again
+; if R2 > 0xFFFF.FFFF (C = 1), then store R2 @0x40
+    BHS EXCEEDS_FFFF
+
+; else, store R2 @0x20
+    MOVW R1, #0x001C; [20-4 = 1C]
+    MOVT R1, #0x2000
+    STR R2, [R1, #4]!
+
+
+
+
+
+
+
+;-----------------------------------------------------------------------------------------------------------------------------------
+
+;SUMA2 (X_i + Y_i)
+
+
+; Starting point where we can take values from [X_i]
+    MOVW R0, #0xFFFF ;[2000.0000 - 1] = 1FFF.FFFF
+    MOVT R0, #0x1FFF
+
+; R12 points to [Y_0] i.e. [2000.000A] minus one
+    MOVW R12, #0x0009 ;[2000.000A - 1] = 2000.0009
+    MOVT R12, #0x2000
+
+    MOV R10, #0
+
+    MOVW R1, #0x001C; [20-4 = 1C]
+    MOVT R1, #0x2000
+
+; Second sum, exercise three
+SUM2_EX3
+    LDRB R1, [R0, #1]!;  R1 = X_i; [0 =< i =< 4]
+    LDRB R2, [R12, #1]!; R1 = X_i; [0 =< i =< 4]
+    ADDS R2, R1; Store the updated result in R3
+    ADDS R3, R2; Step needed
+    ADDS  R10, R10, #1 ; Start with the first iteration
+    CMP R10, #4 ; Make sure to do this 10x
+
+    BNE SUM2_EX3 ; While not equal, go back and sum again
+
+    MOVW R1, #0x0024; [28-4 = 24] bc its the third exercise
+    MOVT R1, #0x2000
+    STR R3, [R1, #4]!
+
+
+
+
+
+;-----------------------------------------------------------------------------------------------------------------------------------
+
+
+;DIVISION
+
+    MOV R2, #sum       ; Load sum into R2
+    MOV R4, #count     ; Load count into R4
+
+    ; Calculate average using integer division
+    SDIV R5, R2, R4    ; R5 = 20/7 = [2].(8)5 ; 0x02
+    ; Calculate remainder (decimal part)
+    MOV R6, #100      ; Scaling factor (for 2 decimal places) 0xA; Each 0 is a place, do not set more than 100 because the error increases. 100 is ok
+    MUL R7, R2, R6     ; R7 = 20*10 = 200; 0xC8
+    SDIV R7, R7, R4    ; R7 = 28, we want the LSB: 8x10^0, see first sdiv; 0x1C
+
+    MUL R0, R5, R6 ; R0 = 2*10 = 20; 0x14
+    SUB R1, R7, R0     ; R1 = 28 - 20 = 8; 0x08
+
+    ; Store the integer and decimal parts in a 32-bit format
+    ; Assuming memory address 0x2000.0020 for storage
+    MOVW R0, #0x0020
+    MOVT R0, #0x2000
+    STR R5, [R0]        ; Store integer part
+    STR R1, [R0, #4]    ; Store decimal part
+
+end B end
+
+;-----------------------------------------------------------------------------------------------------------------------------------
