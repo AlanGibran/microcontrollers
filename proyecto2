@@ -5,7 +5,7 @@
 ; Offset that updates the pointer when assigning values to RAM
 OS   .EQU 0x04
 ITER .EQU 10 ; Counter in decimal
-sum     .EQU    50 ; 0x14
+sum     .EQU    20 ; 0x14
 count   .EQU    7 ; 0x07
 
 ; Case RESULT (R2) > 0xFFFF.FFFF (C = 1)
@@ -18,7 +18,7 @@ EXCEEDS_FFFF
 
 main
 
-
+	B DIVISION
 ; ***************-SUM-***************
 
 ; Starting from 0x2000.0000
@@ -42,7 +42,6 @@ main
     MOVT R1, #0x1312
     STR R1, [R0, #OS]!
 
-	B PROBLEM_3
 
 ; Starting point where we can take values from
     MOVW R0, #0xFFFF ;[2000.0000 - 1] = 1FFF.FFFF
@@ -200,27 +199,27 @@ SUM2_EX3
 ;-----------------------------------------------------------------------------------------------------------------------------------
 
 
-;DIVISION
+DIVISION
 
-    MOV R2, #sum       ; Load sum into R2
-    MOV R4, #count     ; Load count into R4
+    MOV R2, #sum       ; Load sum into R2 ;20
+    MOV R4, #count     ; Load count into R4 ; 7
 
     ; Calculate average using integer division
     SDIV R5, R2, R4    ; R5 = 20/7 = [2].(8)5 ; 0x02
     ; Calculate remainder (decimal part)
     MOV R6, #100      ; Scaling factor (for 2 decimal places) 0xA; Each 0 is a place, do not set more than 100 because the error increases. 100 is ok
-    MUL R7, R2, R6     ; R7 = 20*10 = 200; 0xC8
-    SDIV R7, R7, R4    ; R7 = 28, we want the LSB: 8x10^0, see first sdiv; 0x1C
+    MUL R7, R2, R6     ; R7 = 20*100 = 2000; 0x7D0
+    SDIV R7, R7, R4    ; R7 = 285, we want the LSB: 8x10^1 5x10^0, see first sdiv; 0x11D
 
-    MUL R0, R5, R6 ; R0 = 2*10 = 20; 0x14
+    MUL R0, R5, R6 ; R0 = 2*100 = 200; 0xC8
     SUB R1, R7, R0     ; R1 = 28 - 20 = 8; 0x08
 
     ; Store the integer and decimal parts in a 32-bit format
     ; Assuming memory address 0x2000.0020 for storage
     MOVW R6, #0x002C
     MOVT R6, #0x2000
-    STR R1, [R6, #1]!    ; Store decimal part
-    STR R5, [R6]        ; Store integer part
+    STRB R1, [R6]    ; Store decimal part
+    STR R5, [R6, #1]        ; Store integer part
 
 
 end B end
