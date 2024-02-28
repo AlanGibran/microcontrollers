@@ -13,7 +13,7 @@ EXCEEDS_FFFF
     MOVW R1, #0x003C; [40-4 = 3C]
     MOVT R1, #0x2000
     STR R2, [R1, #4]!
-    B end
+    B PROBLEM_3
 
 
 main
@@ -25,20 +25,20 @@ main
     MOVT R0, #0x2000
 
 ; Store 20 values
-    MOVW R1, #0x01FA
+    MOVW R1, #0x0100
     MOVT R1, #0x0302
     STR R1, [R0]
-;    MOVW R1, #0x0504
-;    MOVT R1, #0x0706
+    MOVW R1, #0x0504
+    MOVT R1, #0x0706
     STR R1, [R0, #OS]!
-;    MOVW R1, #0x0908
-;    MOVT R1, #0x0B0A
+    MOVW R1, #0x0908
+    MOVT R1, #0x0B0A
     STR R1, [R0, #OS]!
-;    MOVW R1, #0x0D0C
-;    MOVT R1, #0x0F0E
+    MOVW R1, #0x0D0C
+    MOVT R1, #0x0F0E
     STR R1, [R0, #OS]!
-;    MOVW R1, #0x1110
-;    MOVT R1, #0x1312
+    MOVW R1, #0x1110
+    MOVT R1, #0x1312
     STR R1, [R0, #OS]!
 
 ; Starting point where we can take values from
@@ -62,9 +62,9 @@ SUM
     BNE SUM ; While not equal, go back and SUM again
 
 ; Store the sum result in a 32-bit format @0x2000.0020
-    MOVW R6, #0x0020
+    MOVW R6, #0x001C
     MOVT R6, #0x2000
-    STR R2, [R6]
+    STR R2, [R6, #4]!
 
 
 
@@ -72,7 +72,9 @@ SUM
 
 ;-----------------------------------------------------------------------------------------------------------------------------------
 
+
 ; *********SUM-OF-SQUARED-PRODUCTS**********
+
 
 ; Starting point where we can take values from [X_i]
     MOVW R0, #0xFFFF ;[2000.0000 - 1] = 1FFF.FFFF
@@ -138,16 +140,18 @@ SQUARED
 SUM_SQ
     LDR R1, [R9, #4]! ; doesn't matter the previous value of R1
     ADDS R2, R1 ; Updates the sum
-    ADD  R10, R10, #1 ; Start with the first iteration
-    CMP R10, #2 ; Make sure to do this 4x*******************************************
-    BNE SUM_SQ ; While not equal, go back and sum again
+
 ; if R2 > 0xFFFF.FFFF (C = 1), then store R2 @0x40
     BHS EXCEEDS_FFFF
 
+    ADD  R10, R10, #1 ; Start with the first iteration
+    CMP R10, #2 ; Make sure to do this 4x*******************************************
+    BNE SUM_SQ ; While not equal, go back and sum again
+
+
 ; else, store R2 @0x20
-    MOVW R1, #0x001C; [20-4 = 1C]
-    MOVT R1, #0x2000
-    STR R2, [R1, #4]!
+
+    STR R2, [R6, #4]!
 
 
 
@@ -159,7 +163,7 @@ SUM_SQ
 
 ;SUMA2 (X_i + Y_i)
 
-
+PROBLEM_3
 ; Starting point where we can take values from [X_i]
     MOVW R0, #0xFFFF ;[2000.0000 - 1] = 1FFF.FFFF
     MOVT R0, #0x1FFF
@@ -170,8 +174,7 @@ SUM_SQ
 
     MOV R10, #0
 
-    MOVW R1, #0x001C; [20-4 = 1C]
-    MOVT R1, #0x2000
+	MOV R3, #0
 
 ; Second sum, exercise three
 SUM2_EX3
@@ -180,13 +183,12 @@ SUM2_EX3
     ADDS R2, R1; Store the updated result in R3
     ADDS R3, R2; Step needed
     ADDS  R10, R10, #1 ; Start with the first iteration
-    CMP R10, #4 ; Make sure to do this 10x
+    CMP R10, #2 ; Make sure to do this 10x***************************************************
 
     BNE SUM2_EX3 ; While not equal, go back and sum again
 
-    MOVW R1, #0x0024; [28-4 = 24] bc its the third exercise
-    MOVT R1, #0x2000
-    STR R3, [R1, #4]!
+
+    STR R3, [R6, #4]!
 
 
 
@@ -214,8 +216,9 @@ SUM2_EX3
     ; Assuming memory address 0x2000.0020 for storage
     MOVW R0, #0x0020
     MOVT R0, #0x2000
-    STR R5, [R0]        ; Store integer part
-    STR R1, [R0, #4]    ; Store decimal part
+    STR R1, [R6, #1]!    ; Store decimal part
+    STR R5, [R6]        ; Store integer part
+
 
 end B end
 
