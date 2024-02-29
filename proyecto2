@@ -204,7 +204,7 @@ SUM2_EX3
 
 
     LDR R2, [R6]
-    MOV R4, #ITER
+    MOV R4, #ITER ; es la N para dividir el promedio la suma
 
     ; Calculate average using integer division
     SDIV R5, R2, R4    ; R5 = 20/7 = [2].(8)5 ; 0x02
@@ -223,6 +223,62 @@ SUM2_EX3
     STRB R1, [R6]    ; Store decimal part
     STR R5, [R6, #1]        ; Store integer part
 
+;--------------------------------------------------------------------------------------------------------------------
+
+; Exercise 5
+
+
+; R12 points to [Y_0] i.e. [2000.000A] minus one
+    MOVW R12, #0x0009 ;[2000.000A - 1] = 2000.0009
+    MOVT R12, #0x2000
+
+; R1 fetches each byte from RAM
+    MOV R1, #0
+
+; R2 stores the 8-bit value from RAM
+    MOV R2, #0 ; R2 = sum_{0}^{9} X_i for each iteration
+
+; Counter. If R10 = 10, exits SUM loop
+    MOV  R10, #0
+
+SUM_Y
+    LDRB R1, [R12, #1]!; LDR{B} Just one byte is retrieved. Updates pointer (R0 = R0 + 1)
+    ADDS R2, R1; {S} sets state. Stores the updated result in R2
+    ADD  R10, R10, #1 ; counter = counter + 1
+    CMP R10, #ITER ; Make sure to do this 10x ################################################################# TESTING
+    BNE SUM_Y ; While not equal, go back and SUM again
+
+; Store the sum result in a 32-bit format @0x2000.0020
+    MOVW R6, #0x0030
+    MOVT R6, #0x2000
+    STR R2, [R6]
+; ----------------------------------- hasta aquí se va a guardar la suma
+
+
+; AVERAGE EX4
+    MOVW R6, #0x0030
+    MOVT R6, #0x2000
+; la saco del mismo lugar donde guarde la suma
+
+    LDR R2, [R6] ; r2 se sobrescribe
+    MOV R4, #ITER ; R4 = 10 porque es sum (Y_i)/N
+
+    ; Calculate average using integer division
+    SDIV R5, R2, R4    ; R5 = 20/7 = [2].(8)5 ; 0x02
+    ; Calculate remainder (decimal part)
+    MOV R6, #100      ; Scaling factor (for 2 decimal places) 0xA; Each 0 is a place, do not set more than 100 because the error increases. 100 is ok
+    MUL R7, R2, R6     ; R7 = 20*100 = 2000; 0x7D0
+    SDIV R7, R7, R4    ; R7 = 285, we want the LSB: 8x10^1 5x10^0, see first sdiv; 0x11D
+
+    MUL R0, R5, R6 ; R0 = 2*100 = 200; 0xC8
+    SUB R1, R7, R0     ; R1 = 28 - 20 = 8; 0x08
+
+    ; Store the integer and decimal parts in a 32-bit format
+    ; Assuming memory address 0x2000.0020 for storage
+    MOVW R6, #0x0030
+    MOVT R6, #0x2000
+    STRB R1, [R6]    ; Store decimal part
+    STR R5, [R6, #1]        ; Store integer part
 
 end B end
 
