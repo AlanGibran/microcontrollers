@@ -1,15 +1,14 @@
 ; Project 2: Arithmetic using the Assembly Language
 
-
     .global main
-
 
 ; Offset that updates the pointer when assigning values to RAM
 OS   .EQU 0x04
 ITER .EQU 10 ; Counter in decimal
 
 
-; Case RESULT (R2) > 0xFFFF.FFFF (C = 1)
+; Case RESULT > 0xFFFF.FFFF (C=1)
+
 EXCEEDS_FFFF
     MOVW R1, #0x0150 ; [40-4 = 3C]
     MOVT R1, #0x2000
@@ -31,10 +30,10 @@ main
 
 ; Store 20 values
 	; X_i
-    MOVW R1, #0x0000
-    MOVT R1, #0x0000
+    MOVW R1, #0xFFFF
+    MOVT R1, #0xFFFF
     STR R1, [R0]
-    MOVW R1, #0xFF00
+    MOVW R1, #0xFFFF
     MOVT R1, #0xFFFF
     STR R1, [R0, #OS]!
     MOVW R1, #0xFFFF
@@ -43,12 +42,13 @@ main
     MOVT R1, #0xFFFF
     STR R1, [R0, #OS]!
     MOVW R1, #0xFFFF
-    MOVT R1, #0x00FF
+    MOVT R1, #0xFFFF
     STR R1, [R0, #OS]!
-    MOVW R1, #0x0000
-    MOVT R1, #0x0000
+    MOVW R1, #0xFFFF
+    MOVT R1, #0xFFFF
     STR R1, [R0, #OS]!
 
+;-------------------------------------------------------------
 
 ; Starting point where we can take values from
     MOVW R0, #0xFFFF ; [2000.0000 - 1] = 1FFF.FFFF
@@ -57,7 +57,7 @@ main
 ; R1 retrieves each byte from RAM
     MOV R1, #0
 
-; R2 stores the 8-bit value from RAM
+; R2 holds the 8-bit value from RAM
     MOV R2, #0 ; R2 = sum_{0}^{9} X_i for each iteration
 
 ; Counter. If R10 = 10, exits SUM loop
@@ -75,7 +75,7 @@ SUM
     MOVT R6, #0x2000
     STR R2, [R6]
 
-
+;--------------------------------------------------------------------------------------------------------------------------
 
 
 ;-------------------------------------------------------------
@@ -155,7 +155,7 @@ SUM_SQ
     LDR R1, [R9, #4]! ; Load
     ADDS R2, R1 ; Updates the sum
 
-; if R2 > 0xFFFF.FFFF (C=1), then store R2 @0x40
+; If R2 > 0xFFFF.FFFF (C=1), then store R2 @0x40
     BHS EXCEEDS_FFFF
 
     ADD  R10, R10, #1 ; Start with the first iteration
@@ -185,9 +185,9 @@ PROBLEM_3
     MOVW R12, #0x0009 ; [2000.000A - 1] = 2000.0009
     MOVT R12, #0x2000
 
-    MOV R10, #0
+    MOV R10, #0 ; Counter
 
-	MOV R3, #0
+	MOV R3, #0 ; Store the final result here
 
 
 SUM2_EX3
@@ -210,49 +210,59 @@ SUM2_EX3
 
 ;-------------------------------------------------------------
 ; PROBLEM 4
-; X VALUES AVERAGE
+; X ARITHMETIC MEAN
 ; \bar{X}
 ;-------------------------------------------------------------
 
-; Fetch the \sum_0^9****************************************************************************************************************************
+; \sum_0^9 has been already calculated and stored
     MOVW R6, #0x0020
     MOVT R6, #0x2000
 
+    LDR R2, [R6] ; Load the sum in R2
+    MOV R4, #ITER ; Number of values
 
-    LDR R2, [R6]
-    MOV R4, #ITER ; es la N para dividir el promedio la suma
+; Calculate the average using integer division
+    SDIV R5, R2, R4 ; SDIV for signed numbers
 
-    ; Calculate average using integer division
-    SDIV R5, R2, R4    ; R5 = 20/7 = [2].(8)5 ; 0x02
-    ; Calculate remainder (decimal part)
-    MOV R6, #100      ; Scaling factor (for 2 decimal places) 0xA; Each 0 is a place, do not set more than 100 because the error increases. 100 is ok
-    MUL R7, R2, R6     ; R7 = 20*100 = 2000; 0x7D0
-    SDIV R7, R7, R4    ; R7 = 285, we want the LSB: 8x10^1 5x10^0, see first sdiv; 0x11D
+;-------------------------------------------------------------
 
-    MUL R0, R5, R6 ; R0 = 2*100 = 200; 0xC8
-    SUB R1, R7, R0     ; R1 = 28 - 20 = 8; 0x08
+; Calculate remainder (decimal part)
+    MOV R6, #100 ; Scaling factor (for 2 decimal places). Do not set more than 100, otherwise the error may increase
+    MUL R7, R2, R6 ; Multiply the original sum by the scaling factor (scaled_quotient)
+    SDIV R7, R7, R4 ; Perform the division
 
-    ; Store the integer and decimal parts in a 32-bit format
-    ; Assuming memory address 0x2000.0020 for storage
-    MOVW R6, #0x002C
+; Substract the (quotient*scaling_factor) from the scaled_quotient
+    MUL R0, R5, R6 ; R0 = quotient*scaling_factor
+    SUB R1, R7, R0 ; R1 = (scaled_quotient) - (quotient*scaling_factor)
+
+; Store the integer and decimal parts
+    MOVW R6, #0x002C ; Fourth place in memory
     MOVT R6, #0x2000
-    STRB R1, [R6]    ; Store decimal part
-    STR R5, [R6, #1]        ; Store integer part
 
-;--------------------------------------------------------------------------------------------------------------------
+    STRB R1, [R6] ; Store decimal part here (just one byte is needed for a two-decimal representation)
+    STR R5, [R6, #1] ; Integer part here goes here
 
-; Exercise 5
 
+
+;-------------------------------------------------------------
+; PROBLEM 5
+; Y ARITHMETIC MEAN
+; \bar{Y}
+;-------------------------------------------------------------
+
+;-------------------------------------------------------------
+; SUM
+; First calculate the sum \sum^{0}^{9} Y_i
 
 ; R12 points to [Y_0] i.e. [2000.000A] minus one
     MOVW R12, #0x0009 ;[2000.000A - 1] = 2000.0009
     MOVT R12, #0x2000
 
-; R1 fetches each byte from RAM
+; R1 retrieves each byte from RAM
     MOV R1, #0
 
-; R2 stores the 8-bit value from RAM
-    MOV R2, #0 ; R2 = sum_{0}^{9} X_i for each iteration
+; R2 holds the 8-bit value from RAM
+    MOV R2, #0 ; R2 = sum_{0}^{9} Y_i for each iteration
 
 ; Counter. If R10 = 10, exits SUM loop
     MOV  R10, #0
@@ -264,36 +274,39 @@ SUM_Y
     CMP R10, #ITER ; Make sure to do this 10x
     BNE SUM_Y ; While not equal, go back and SUM again
 
-; Store the sum result in a 32-bit format @0x2000.0020
-    MOVW R6, #0x0030
+; Store the sum result in a 32-bit format
+; Doesn't matter where this sum is placed, just make sure not to interfere with the rest of the program
+    MOVW R6, #0x0090 ; R6 = \sum_x^9 Y_i
     MOVT R6, #0x2000
     STR R2, [R6]
-; ----------------------------------- hasta aquí se va a guardar la suma
 
+;-------------------------------------------------------------
 
-; AVERAGE EX4
-    MOVW R6, #0x0030
+; AVERAGE
+; Same process as Problem 4
+    MOVW R6, #0x0090 ; Points to \sum_0^9 Y_i
     MOVT R6, #0x2000
-; la saco del mismo lugar donde guarde la suma
 
-    LDR R2, [R6] ; r2 se sobrescribe
-    MOV R4, #ITER ; R4 = 10 porque es sum (Y_i)/N
+    LDR R2, [R6] ; R2 = \sum_0^9 Y_i
+    MOV R4, #ITER ; Number of values
 
-    ; Calculate average using integer division
-    SDIV R5, R2, R4    ; R5 = 20/7 = [2].(8)5 ; 0x02
-    ; Calculate remainder (decimal part)
-    MOV R6, #100      ; Scaling factor (for 2 decimal places) 0xA; Each 0 is a place, do not set more than 100 because the error increases. 100 is ok
-    MUL R7, R2, R6     ; R7 = 20*100 = 2000; 0x7D0
-    SDIV R7, R7, R4    ; R7 = 285, we want the LSB: 8x10^1 5x10^0, see first sdiv; 0x11D
+    SDIV R5, R2, R4 ; Integer part
 
-    MUL R0, R5, R6 ; R0 = 2*100 = 200; 0xC8
-    SUB R1, R7, R0     ; R1 = 28 - 20 = 8; 0x08
+;-------------------------------------------------------------
 
-    ; Store the integer and decimal parts in a 32-bit format
-    ; Assuming memory address 0x2000.0020 for storage
-    MOVW R6, #0x0030
+; Calculate remainder (decimal part)
+    MOV R6, #100 ; Scaling factor
+    MUL R7, R2, R6
+    SDIV R7, R7, R4 ; Scaled quotient
+
+    MUL R0, R5, R6
+    SUB R1, R7, R0 ; Decimal part result
+
+; Store the integer and decimal parts
+    MOVW R6, #0x0030 ; Fifth place
     MOVT R6, #0x2000
-    STRB R1, [R6]    ; Store decimal part
-    STR R5, [R6, #1]        ; Store integer part
+
+    STRB R1, [R6] ; Store decimal part
+    STR R5, [R6, #1] ; Store integer part
 
 end B end
