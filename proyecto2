@@ -10,7 +10,7 @@ ITER .EQU 10 ; Counter in decimal
 ; Case RESULT > 0xFFFF.FFFF (C=1)
 
 EXCEEDS_FFFF
-    MOVW R1, #0x0150 ; [40-4 = 3C]
+    MOVW R1, #0x003C ; [40-4 = 3C]
     MOVT R1, #0x2000
     STR R2, [R1, #4]!
 
