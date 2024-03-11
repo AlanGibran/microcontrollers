@@ -42,7 +42,7 @@ main
 
 ;-----------------------------------------------------------------
 	LDR R1,GPIO_PORTN_DIR_N ; input or output
-	MOV R0, #0x03 PN1 PN0
+	MOV R0, #0x03; PN1 PN0
 	STR R0,[R1] ; write 0000.0011b onto DIR register
 
 	LDR R1, GPIO_PORTF_DIR_F ; input or output
