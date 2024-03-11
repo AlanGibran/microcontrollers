@@ -1,8 +1,8 @@
-;** 4 leds
+;** 4 leds, PN on, PF off and viceversa
 
 	.global main
 
-	.text 
+	.text
 SYSCTL_RCGCGPIO_R .field 0x400FE608,32 ; REGISTRO DEL RELOJ
 
 
@@ -54,7 +54,7 @@ main
 	MOV R0, #0x03
 	STR R0, [R1]
 
-	LDR R1, GPIO_PORTF_DEN_F ; 
+	LDR R1, GPIO_PORTF_DEN_F ;
 	MOV R5, #0x11
 	STR R5, [R1]
 
@@ -62,21 +62,23 @@ main
 
 	LDR R1, GPIO_PORTN_DATA_N ; Gotta write ON/OFF here
 
-	LDR R3, GPIO_PORTF_DATA_F 
+	LDR R3, GPIO_PORTF_DATA_F
 
 salto
+	MOV R5, #LEDS_OFF
 	STR R0, [R1] ; Escribe en el registro del datos del Puerto N
 	STR R5, [R3]
 	MOVW R10, #0xB0A9 ; 0x0028.B0A9 = 2.6 millones veces se repite el proceso
-	MOVT R10, #0x0058 ; aquí se consumen 0.5[s] y son 3 instrucciones por ciclo
+	MOVT R10, #0x0028 ; aquí se consumen 0.5[s] y son 3 instrucciones por ciclo
 	; 2.6 millones de veces con T = 62.5[ns] por 3 instrucciones consumen 0.5s
 	BL loop_delay ; #valor del contador = 0.5[s]/(3*T) = 2.6E6 =  0x0028.B0A9
 
 	MOV R2, #LEDS_OFF
-	STR R2,[R1] ;apaga
-	STR R2,[R3] ;apaga
+	MOV R5, #LEDS_F
+	STR R2,[R1] ;apaga N
+	STR R5,[R3] ;prende F
 	MOVW R10, #0xB0A9 ; mismo proceso
-	MOVT R10, #0x0058 ;
+	MOVT R10, #0x0028 ;
 	BL loop_delay
 	B salto
 
