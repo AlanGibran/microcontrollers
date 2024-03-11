@@ -67,7 +67,7 @@ main
 
 loop  LDR R1,GPIO_PORTN_DATA_J   ; apunta al Puerto de datos J (p. 759* + direccionamiento de cada bit )
       LDR R0,[R1] ; R0 = 0x3 cuándo le metimos 3 data al data_j? Nunca, ya estaba w
-      MOV R5,R0; R5 = R0 = 0x3; Siempre tiene ese valor a lo largo del programa.
+      MOV R5,R0; R5 = R0 = 0x3; Siempre tiene ese valor a lo largo del programa. neta?
       CMP R0,#SW ; 3-3 qué activa? al parecer C=1
 ; BNE se activa cuando Z=0, PERO
       BNE sal; Z=1, entonces no se cumple la condición
@@ -82,9 +82,10 @@ loop  LDR R1,GPIO_PORTN_DATA_J   ; apunta al Puerto de datos J (p. 759* + direcc
 ; 0000.0001
 
 sal   LDR R1,GPIO_PORTN_DATA_N    ; apunta al Puerto de datos N  (p.759 + direccionamiento de cada bit)
-      STR R5,[R1]                 ; Escribe en el registro del datos del Puerto N el valor de J
+      STR R5,[R1]; Prende led ; Escribe en el registro del datos del Puerto N el valor de J
       B loop
-
+;Con 0x1 prende PN0 y con 0x2 prende PN1
+;con 0x3 prenden ambos
 ; -----------------
 
 
