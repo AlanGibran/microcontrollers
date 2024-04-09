@@ -164,7 +164,7 @@ void GPIOPortE_Handler(void){
 
 //Programa principal
 int main(void){
-    EdgeCounter_Init(); // inicializa la interrupción en el puerto GPIO J
+    EdgeCounter_Init(); // inicializa las interrupciones
     Temp();
 
     while(1);
