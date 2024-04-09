@@ -27,11 +27,13 @@
 #define GPIO_PORTJ_DEN_R (*((volatile uint32_t *)0x4006051C)) //Registro de habilitación PJ
 #define GPIO_PORTJ_PUR_R (*((volatile uint32_t *)0x40060510)) //Registro de pull-up PJ
 #define GPIO_PORTJ_DATA_R (*((volatile uint32_t *)0x40060004)) //Registro de Datos J
+
 #define GPIO_PORTJ_IS_R (*((volatile uint32_t *)0x40060404)) //Registro de configuración de detección de nivel o flanco
 #define GPIO_PORTJ_IBE_R (*((volatile uint32_t *)0x40060408)) //Registro de configuración de interrupción por ambos flancos
 #define GPIO_PORTJ_IEV_R (*((volatile uint32_t *)0x4006040C)) //Registro de configuración de interrupción por un flanco
 #define GPIO_PORTJ_ICR_R (*((volatile uint32_t *)0x4006041C)) //Registro de limpieza de interrupcion de flanco en PJ
 #define GPIO_PORTJ_IM_R (*((volatile uint32_t *)0x40060410)) //Registro de mascara de interrupcion PJ (p.764)
+
 #define NVIC_EN1_R (*((volatile uint32_t *)0xE000E104)) // Registro de habilitación de interrupción PJ
 #define NVIC_PRI12_R (*((volatile uint32_t *)0xE000E430))//Registro de prioridad de interrupción
 
@@ -44,11 +46,13 @@
 #define GPIO_PORTE_DEN_R (*((volatile uint32_t *)0x4005C51C)) //Registro de habilitación PE
 #define GPIO_PORTE_PUR_R (*((volatile uint32_t *)0x4005C510)) //Registro de pull-up PE
 #define GPIO_PORTE_DATA_R (*((volatile uint32_t *)0x4005C004)) //Registro de Datos PE
+
 #define GPIO_PORTE_IS_R (*((volatile uint32_t *)0x4005C404)) //Registro de configuración de detección de nivel o flanco
 #define GPIO_PORTE_IBE_R (*((volatile uint32_t *)0x4005C408)) //Registro de configuración de interrupción por ambos flancos
 #define GPIO_PORTE_IEV_R (*((volatile uint32_t *)0x4005C40C)) //Registro de configuración de interrupción por un flanco
 #define GPIO_PORTE_ICR_R (*((volatile uint32_t *)0x4005C41C)) //Registro de limpieza de interrupcion de flanco en PJ
 #define GPIO_PORTE_IM_R (*((volatile uint32_t *)0x4005C410)) //Registro de mascara de interrupcion PE (p.764)
+
 #define NVIC_EN0_R (*((volatile uint32_t *)0xE000E100)) // Registro de habilitación de interrupción PE, interrupcion 4
 #define NVIC_PRI1_R (*((volatile uint32_t *)0xE000E404))//Registro de prioridad de interrupción
 
