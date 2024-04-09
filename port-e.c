@@ -34,7 +34,7 @@
 #define GPIO_PORTJ_ICR_R (*((volatile uint32_t *)0x4006041C)) //Registro de limpieza de interrupcion de flanco en PJ
 #define GPIO_PORTJ_IM_R (*((volatile uint32_t *)0x40060410)) //Registro de mascara de interrupcion PJ (p.764)
 
-#define NVIC_EN1_R (*((volatile uint32_t *)0xE000E104)) // Registro de habilitación de interrupción PJ
+#define NVIC_EN1_R (*((volatile uint32_t *)0xE000E104)) // Registro de habilitación de interrupción PJ, interrupción X
 #define NVIC_PRI12_R (*((volatile uint32_t *)0xE000E430))//Registro de prioridad de interrupción
 
 
@@ -121,15 +121,15 @@ void Temp(void){
 }
 
 void SysTick_Wait (uint32_t retardo){
-    NVIC_ST_RELOAD_R= retardo-1; //número de cuentas por esperar
+    NVIC_ST_RELOAD_R = retardo - 1; //número de cuentas por esperar
     NVIC_ST_CURRENT_R = 0;
-    while((NVIC_ST_CTRL_R & 0x00010000)==0){//espera hasta que la bandera COUNT sea valida
+    while((NVIC_ST_CTRL_R & 0x00010000) == 0){//espera hasta que la bandera COUNT sea valida
     }
 }
 
 void SysTick_Wait_2s(int retardo){
-    int i=0;
-    for(i=0; i<retardo; i++){
+    int i = 0;
+    for(i = 0; i < retardo; i++){
     SysTick_Wait(800000); // Espera 1 s (asume reloj de 16)
     }
 }
@@ -140,7 +140,7 @@ void GPIOPortJ_Handler(void){
     GPIO_PORTJ_ICR_R = 0x03; // bandera de confirmación
     Flancosdebajada = Flancosdebajada + 1;
     int L;
-    for(L=0; L<5;L++){
+    for(L = 0; L < 5; L++){
         GPIO_PORTN_DATA_R = 0x03;
         SysTick_Wait_2s(5);
         GPIO_PORTN_DATA_R = 0x00;
@@ -152,7 +152,7 @@ void GPIOPortE_Handler(void){
     GPIO_PORTE_ICR_R = 0x01;
     Flancosdebajada = Flancosdebajada + 1;
     int L;
-    for(L=0; L<10;L++){
+    for(L = 0; L < 10; L++){
         GPIO_PORTN_DATA_R = 0x03;
         SysTick_Wait_2s(1);
         GPIO_PORTN_DATA_R = 0x00;
