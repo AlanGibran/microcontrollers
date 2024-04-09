@@ -1,16 +1,19 @@
 // Interrupción por flanco de bajada en PJ0 = SW1
 // La Rutina de Servicio de Interrupción incrementa a un contador.
+
 #include <stdint.h>
 
 
 /*--------------------------------------------------------------------------------------------
  * Registro de reloj para los puertos
  * -----------------------------------------------------------------------------------------*/
-#define SYSCTL_RCGCGPIO_R (*((volatile uint32_t *)0x400FE608))
-#define SYSCTL_PRGPIO_R (*((volatile unsigned long *)0x400FEA08))
+#define SYSCTL_RCGCGPIO_R       (*((volatile uint32_t *)0x400FE608))
+#define SYSCTL_PRGPIO_R         (*((volatile unsigned long *)0x400FEA08))
+
 #define NVIC_ST_CTRL_R          (*((volatile unsigned long *)0xE000E010)) //apuntador del registro que permite configurar las acciones del temporizador
 #define NVIC_ST_RELOAD_R        (*((volatile unsigned long *)0xE000E014)) //apuntador del registro que contiene el valor de inicio del contador
 #define NVIC_ST_CURRENT_R       (*((volatile unsigned long *)0xE000E018)) //apuntador del registro que presenta el estado de la cuenta actual
+
 #define NVIC_ST_CTRL_COUNT     0x00010000   //Bandera que se levanta cuando llega a 0 la cuenta
 #define NVIC_ST_CTRL_CLK_SRC   0x00000004 // Clock Source
 #define NVIC_ST_CTRL_INTEN     0x00000002 // Habilitador de interrupción
@@ -61,13 +64,14 @@
 
 
 
-int i=0;
+int i = 0;
 // Incrementa la variable una vez cada que se presiona SW1 -Interrupcion PJ =&gt; #51 (p. 115)
 volatile uint32_t Flancosdebajada = 0;
+
+
 void EdgeCounter_Init(void){
 SYSCTL_RCGCGPIO_R |= 0x00001110; // (a) activa el reloj para el puerto J, E y N
 Flancosdebajada = 0; // (b) inicializa el contador
-
 
 //Puerto N
 GPIO_PORTN_DIR_R |= 0x03;    // puerto N de salida
@@ -96,6 +100,7 @@ GPIO_PORTE_IEV_R &= ~0x01; // PJ1 detecta eventos de flanco de bajada (p.763)
 GPIO_PORTE_ICR_R = 0x01; // (e) limpia la bandera 0 (p.769)
 GPIO_PORTE_IM_R |= 0x01; // (f) Se desenmascara la interrupcion PJ0 y PJ1 y se envia al
 //controlador de interrupciones (p.764)
+
 NVIC_PRI1_R = (NVIC_PRI1_R&0xFFFFFF00)|0x00000000; // (g) prioridad 0 (p. 159)
 NVIC_EN0_R= 1<<(4-0); //(h) habilita la interrupción 4 en NVIC (p. 154) se realiza el corrimiento
 }
@@ -103,12 +108,12 @@ NVIC_EN0_R= 1<<(4-0); //(h) habilita la interrupción 4 en NVIC (p. 154) se real
 
 
 void Temp(void);
+
 void Temp(void){
     NVIC_ST_CTRL_R = 0; // Desahabilita el SysTick durante la configuración
     NVIC_ST_RELOAD_R = NVIC_ST_RELOAD_M; // Se establece el valor de cuenta deseado en RELOAD_R
     NVIC_ST_CURRENT_R = 0; // Se escribe al registro current para limpiarlo
     NVIC_ST_CTRL_R = 0x00000001; // Se Habilita el SysTick y se selecciona la fuente de reloj
-
 }
 
 void SysTick_Wait (uint32_t retardo){
@@ -116,49 +121,47 @@ void SysTick_Wait (uint32_t retardo){
     NVIC_ST_CURRENT_R = 0;
     while((NVIC_ST_CTRL_R & 0x00010000)==0){//espera hasta que la bandera COUNT sea valida
     }
-    }
+}
 
 void SysTick_Wait_2s(int retardo){
-int i=0;
-for(i=0; i<retardo; i++){
-SysTick_Wait(800000); // Espera 1 s (asume reloj de 16)
-}
-}
-
-
-
-void GPIOPortJ_Handler(void)
-{
-GPIO_PORTJ_ICR_R = 0x03; // bandera de confirmación
-Flancosdebajada = Flancosdebajada + 1;
-int L;
-for(L=0; L<5;L++){
-GPIO_PORTN_DATA_R = 0x03;
-SysTick_Wait_2s(5);
-GPIO_PORTN_DATA_R = 0x00;
-SysTick_Wait_2s(5);
-}
+    int i=0;
+    for(i=0; i<retardo; i++){
+    SysTick_Wait(800000); // Espera 1 s (asume reloj de 16)
+    }
 }
 
-void GPIOPortE_Handler(void)
-{
-GPIO_PORTE_ICR_R = 0x01;
-Flancosdebajada = Flancosdebajada + 1;
-int L;
-for(L=0; L<10;L++){
-GPIO_PORTN_DATA_R = 0x03;
-SysTick_Wait_2s(1);
-GPIO_PORTN_DATA_R = 0x00;
-SysTick_Wait_2s(1);
+
+
+void GPIOPortJ_Handler(void){
+    GPIO_PORTJ_ICR_R = 0x03; // bandera de confirmación
+    Flancosdebajada = Flancosdebajada + 1;
+    int L;
+    for(L=0; L<5;L++){
+        GPIO_PORTN_DATA_R = 0x03;
+        SysTick_Wait_2s(5);
+        GPIO_PORTN_DATA_R = 0x00;
+        SysTick_Wait_2s(5);
+    }
 }
+
+void GPIOPortE_Handler(void){
+    GPIO_PORTE_ICR_R = 0x01;
+    Flancosdebajada = Flancosdebajada + 1;
+    int L;
+    for(L=0; L<10;L++){
+        GPIO_PORTN_DATA_R = 0x03;
+        SysTick_Wait_2s(1);
+        GPIO_PORTN_DATA_R = 0x00;
+        SysTick_Wait_2s(1);
+    }
 }
 
 
 
 //Programa principal
 int main(void){
-EdgeCounter_Init(); // inicializa la interrupción en el puerto GPIO J
-Temp();
+    EdgeCounter_Init(); // inicializa la interrupción en el puerto GPIO J
+    Temp();
 
-while(1);
+    while(1);
 }
