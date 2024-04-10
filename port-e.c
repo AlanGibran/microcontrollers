@@ -85,11 +85,15 @@ GPIO_PORTN_DEN_R |= 0x03;    // habilita el puerto N
 GPIO_PORTJ_DIR_R &= ~0x03; // (c) PJ0 dirección entrada - boton SW1
 GPIO_PORTJ_DEN_R |= 0x03; // PJ0 se habilita
 GPIO_PORTJ_PUR_R |= 0x03; // habilita weak pull-up on PJ1
+    
 GPIO_PORTJ_IS_R &= ~0x03; // (d) PJ1 es sensible por flanco (p.761)
 GPIO_PORTJ_IBE_R &= ~0x03; // PJ1 no es sensible a dos flancos (p. 762)
 GPIO_PORTJ_IEV_R &= ~0x03; // PJ1 detecta eventos de flanco de bajada (p.763)
 GPIO_PORTJ_ICR_R = 0x03; // (e) limpia la bandera 0 (p.769)
 GPIO_PORTJ_IM_R |= 0x03; // (f) Se desenmascara la interrupcion PJ0 y PJ1 y se envia al
+
+    
+    
 //controlador de interrupciones (p.764)
 NVIC_PRI12_R = (NVIC_PRI12_R&0x00FFFFFF)|0x20000000; // (g) prioridad 0 (p. 159)
 NVIC_EN1_R= 1<<(51-32); //(h) habilita la interrupción 51 en NVIC (p. 154) se realiza el corrimiento
