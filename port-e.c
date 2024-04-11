@@ -7,17 +7,17 @@
 /*--------------------------------------------------------------------------------------------
  * Registro de reloj para los puertos
  * -----------------------------------------------------------------------------------------*/
-#define SYSCTL_RCGCGPIO_R       (*((volatile uint32_t *)0x400FE608))
-#define SYSCTL_PRGPIO_R         (*((volatile unsigned long *)0x400FEA08))
+#define SYSCTL_RCGCGPIO_R       (*((volatile uint32_t *)0x400FE608)) // Registro de Habilitación de Reloj de Puertos
+#define SYSCTL_PRGPIO_R         (*((volatile unsigned long *)0x400FEA08)) // Registro de estatus de Reloj de Puerto
 
 #define NVIC_ST_CTRL_R          (*((volatile unsigned long *)0xE000E010)) //apuntador del registro que permite configurar las acciones del temporizador
 #define NVIC_ST_RELOAD_R        (*((volatile unsigned long *)0xE000E014)) //apuntador del registro que contiene el valor de inicio del contador
 #define NVIC_ST_CURRENT_R       (*((volatile unsigned long *)0xE000E018)) //apuntador del registro que presenta el estado de la cuenta actual
 
-#define NVIC_ST_CTRL_COUNT     0x00010000   //Bandera que se levanta cuando llega a 0 la cuenta
-#define NVIC_ST_CTRL_CLK_SRC   0x00000004 // Clock Source
-#define NVIC_ST_CTRL_INTEN     0x00000002 // Habilitador de interrupción
-#define NVIC_ST_CTRL_ENABLE    0x00000001 // Modo del contador
+//#define NVIC_ST_CTRL_COUNT     0x00010000   //Bandera que se levanta cuando llega a 0 la cuenta
+//#define NVIC_ST_CTRL_CLK_SRC   0x00000004 // Clock Source
+//#define NVIC_ST_CTRL_INTEN     0x00000002 // Habilitador de interrupción
+//#define NVIC_ST_CTRL_ENABLE    0x00000001 // Modo del contador
 #define NVIC_ST_RELOAD_M       0x00FFFFFF // Valor de carga del contador
 
 /*--------------------------------------------------------------------------------------------
@@ -74,43 +74,43 @@ volatile uint32_t Flancosdebajada = 0;
 
 
 void EdgeCounter_Init(void){
-SYSCTL_RCGCGPIO_R |= 0x00001110; // (a) activa el reloj para el puerto J, E y N
-Flancosdebajada = 0; // (b) inicializa el contador
-
-//Puerto N
-GPIO_PORTN_DIR_R |= 0x03;    // puerto N de salida
-GPIO_PORTN_DEN_R |= 0x03;    // habilita el puerto N
-
-//Puerto J
-GPIO_PORTJ_DIR_R &= ~0x03; // (c) PJ0 dirección entrada - boton SW1
-GPIO_PORTJ_DEN_R |= 0x03; // PJ0 se habilita
-GPIO_PORTJ_PUR_R |= 0x03; // habilita weak pull-up on PJ1
+    SYSCTL_RCGCGPIO_R |= 0x00001110; // (a) activa el reloj para el puerto J, E y N
+    Flancosdebajada = 0; // (b) inicializa el contador
     
-GPIO_PORTJ_IS_R &= ~0x03; // (d) PJ1 es sensible por flanco (p.761)
-GPIO_PORTJ_IBE_R &= ~0x03; // PJ1 no es sensible a dos flancos (p. 762)
-GPIO_PORTJ_IEV_R &= ~0x03; // PJ1 detecta eventos de flanco de bajada (p.763)
-GPIO_PORTJ_ICR_R = 0x03; // (e) limpia la bandera 0 (p.769)
-GPIO_PORTJ_IM_R |= 0x03; // (f) Se desenmascara la interrupcion PJ0 y PJ1 y se envia al
-
+    //Puerto N
+    GPIO_PORTN_DIR_R |= 0x03;    // puerto N de salida
+    GPIO_PORTN_DEN_R |= 0x03;    // habilita el puerto N
+    
+    //Puerto J
+    GPIO_PORTJ_DIR_R &= ~0x03; // (c) PJ0 dirección entrada - boton SW1
+    GPIO_PORTJ_DEN_R |= 0x03; // PJ0 se habilita
+    GPIO_PORTJ_PUR_R |= 0x03; // habilita weak pull-up on PJ1
+    
+    GPIO_PORTJ_IS_R &= ~0x03; // (d) PJ1 es sensible por flanco (p.761)
+    GPIO_PORTJ_IBE_R &= ~0x03; // PJ1 no es sensible a dos flancos (p. 762)
+    GPIO_PORTJ_IEV_R &= ~0x03; // PJ1 detecta eventos de flanco de bajada (p.763)
+    GPIO_PORTJ_ICR_R = 0x03; // (e) limpia la bandera 0 (p.769)
+    GPIO_PORTJ_IM_R |= 0x03; // (f) Se desenmascara la interrupcion PJ0 y PJ1 y se envia al
     
     
-//controlador de interrupciones (p.764)
-NVIC_PRI12_R = (NVIC_PRI12_R&0x00FFFFFF)|0x20000000; // (g) prioridad 0 (p. 159)
-NVIC_EN1_R= 1<<(51-32); //(h) habilita la interrupción 51 en NVIC (p. 154) se realiza el corrimiento
-
-//Puerto E
-GPIO_PORTE_DIR_R &= ~0x01; // (c) PJ0 dirección entrada - boton SW1
-GPIO_PORTE_DEN_R |= 0x01; // PJ0 se habilita
-GPIO_PORTE_PUR_R |= 0x01; // habilita weak pull-up on PJ1
-GPIO_PORTE_IS_R &= ~0x01; // (d) PJ1 es sensible por flanco (p.761)
-GPIO_PORTE_IBE_R &= ~0x01; // PJ1 no es sensible a dos flancos (p. 762)
-GPIO_PORTE_IEV_R &= ~0x01; // PJ1 detecta eventos de flanco de bajada (p.763)
-GPIO_PORTE_ICR_R = 0x01; // (e) limpia la bandera 0 (p.769)
-GPIO_PORTE_IM_R |= 0x01; // (f) Se desenmascara la interrupcion PJ0 y PJ1 y se envia al
-//controlador de interrupciones (p.764)
-
-NVIC_PRI1_R = (NVIC_PRI1_R&0xFFFFFF00)|0x00000000; // (g) prioridad 0 (p. 159)
-NVIC_EN0_R= 1<<(4-0); //(h) habilita la interrupción 4 en NVIC (p. 154) se realiza el corrimiento
+    
+    //controlador de interrupciones (p.764)
+    NVIC_PRI12_R = (NVIC_PRI12_R&0x00FFFFFF)|0x20000000; // (g) prioridad 0 (p. 159)
+    NVIC_EN1_R= 1<<(51-32); //(h) habilita la interrupción 51 en NVIC (p. 154) se realiza el corrimiento
+    
+    //Puerto E
+    GPIO_PORTE_DIR_R &= ~0x01; // (c) PE0 dirección entrada - boton SW1
+    GPIO_PORTE_DEN_R |= 0x01; // PE0 se habilita
+    GPIO_PORTE_PUR_R |= 0x01; // habilita weak pull-up on PE1
+    GPIO_PORTE_IS_R &= ~0x01; // (d) PE1 es sensible por flanco (p.761)
+    GPIO_PORTE_IBE_R &= ~0x01; // PE1 no es sensible a dos flancos (p. 762)
+    GPIO_PORTE_IEV_R &= ~0x01; // PE1 detecta eventos de flanco de bajada (p.763)
+    GPIO_PORTE_ICR_R = 0x01; // (e) limpia la bandera 0 (p.769)
+    GPIO_PORTE_IM_R |= 0x01; // (f) Se desenmascara la interrupcion PJ0 y PJ1 y se envia al ???
+    //controlador de interrupciones (p.764)
+    
+    NVIC_PRI1_R = (NVIC_PRI1_R&0xFFFFFF00)|0x00000000; // (g) prioridad 0 (p. 159)
+    NVIC_EN0_R= 1<<(4-0); //(h) habilita la interrupción 4 en NVIC (p. 154) se realiza el corrimiento
 }
 
 
